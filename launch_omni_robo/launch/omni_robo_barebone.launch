@@ -1,0 +1,10 @@
+<launch>
+  <node name="differential_kinematics" pkg="differential_kinematics_omni_robo" type="differential_kinematics.py">
+  </node>
+  <node name="odometry" pkg="deduced_reckoning_omni_robo" type="deduced_reckoning.py">
+  </node>
+  <node name="laser_scanner" pkg="hokuyo_node" type="hokuyo_node">
+  </node>
+  <node name="joystick" pkg="joy" type="joy_node">
+  </node>
+</launch>

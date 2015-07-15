@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+#Author: Solomon Jingchun YIN
+#Contact Address: jingchun.yin@live.com
+#Completed on 25th Apr., 2015
+
+import rospy
+import sensor_msgs.msg
+from geometry_msgs.msg import Twist
+
+from numpy import *
+
+limit_linear_speed = 0.15
+limit_angular_speed = pi/6
+tolerance_drift = 1e-3
+
+class cmd_vel_publisher_joystick:
+    def __init__(self):
+        
+        rospy.init_node('cmd_vel_publisher_js', anonymous=True) 
+       
+	self.cmd_old = [0,0,0] 
+        rospy.Subscriber('/joy',sensor_msgs.msg.Joy, self.callback_joy)
+        self.cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size = 10)
+        rospy.spin()
+        
+    def callback_joy(self, data):
+        if (abs(data.axes[5])>tolerance_drift or abs(data.axes[7])>tolerance_drift) or \
+            (abs(data.axes[4])>tolerance_drift or abs(data.axes[6])>tolerance_drift) or \
+            (abs(data.axes[2])>tolerance_drift*10):
+            y_dot = (-abs(data.axes[5])+abs(data.axes[7]))*limit_linear_speed
+            x_dot = (abs(data.axes[4])-abs(data.axes[6]))*limit_linear_speed
+            theta_dot = data.axes[2] * limit_angular_speed
+            
+            cmd = Twist()
+            cmd.linear.x = x_dot
+            cmd.linear.y = y_dot
+            cmd.angular.z = theta_dot
+            self.cmd_vel.publish(cmd)
+            rospy.loginfo('cmd_vel:[%f,%f,%f]', x_dot, y_dot, theta_dot)
+#            rospy.loginfo('x_dot: %f', x_dot)
+#            rospy.loginfo('y_dot: %f', y_dot)            
+#            interval = 10
+#            aux_x = arange(interval)*(-1)*(data.axes[5]-data.axes[7])*limit_linear_speed
+#	    aux_y = arange(interval)*(-1)*(data.axes[4]-data.axes[6])*limit_linear_speed
+#            aux_theta = arange(interval)*(-1)*(data.axes[2])*limit_angular_speed
+#            for i in xrange(1,interval):
+#                cmd = Twist()
+#                cmd.linear.x = aux_x[i] 
+#                cmd.linear.y = aux_y[i] 
+#                cmd.angular.z = aux_theta[i]
+#                self.cmd_vel.publish(cmd)
+#                rospy.loginfo('...cmd_vel [v_x, v_y, w]: [%f, %f, %f]', cmd.linear.x, cmd.linear.y, cmd.angular.z)
+#	    rospy.loginfo('one loop')
+#	    self.cmd_old = [aux_x[len(aux_x)-1], aux_y[len(aux_y)-1], aux_theta[len(aux_theta)-1]]
+        else:
+            self.cmd_vel.publish(Twist())
+            rospy.loginfo('...zero cmd_vel [v_x, v_y, w]: [%f, %f, %f]', 0,0,0)
+            
+if __name__ == '__main__':
+    try:
+        cmd_vel_publisher_joystick()
+    except rospy.ROSInterruptException: pass

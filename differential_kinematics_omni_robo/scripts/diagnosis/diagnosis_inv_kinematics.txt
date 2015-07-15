@@ -1,0 +1,1 @@
+t	v_x	v_y	omega	beta_dot_0	beta_dot_1	phi_dot_0	phi_dot_1	beta0	beta1	phi0	phi1
